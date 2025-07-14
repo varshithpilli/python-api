@@ -82,21 +82,21 @@ def get_post(id: int, response: Response):
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int):
-    idx = get_idx(id)
-    if idx is None:
+    cursor.execute(""" DELETE FROM posts WHERE id = %s RETURNING * """, (id, ))
+    post = cursor.fetchone()
+    conn.commit()
+    if post is None:
         raise HTTPException(status_code=404,
                             detail=f"Post with id: {id} was not found.")
-    my_posts.pop(idx)
     return
 
 @app.put("/posts/{id}")
 def update_post(id: int, response: Response, post: Post):
-    idx = get_idx(id)
-    if idx is None:
+    cursor.execute(""" UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *""", (post.title, post.content, post.published, id))
+    updated_post = cursor.fetchone()
+    conn.commit()
+    if updated_post is None:
         raise HTTPException(status_code=404,
                             detail=f"Post with id: {id} was not found.")
-    post_dict = post.model_dump()
-    post_dict["_id"] = id
-    my_posts[idx] = post_dict
     return {"Message": f"Updated post with id: {id}",
-            "Data": post_dict}
+            "Data": updated_post}
