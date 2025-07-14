@@ -1,17 +1,37 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response, status, HTTPException
 from fastapi.params import Body
 from pydantic import BaseModel
 from typing import Optional
 from random import randrange
-from fastapi import Response, status, HTTPException
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from dotenv import load_dotenv
+import os
+import time
+
+load_dotenv()
+
+host = os.getenv("HOST")
+database = os.getenv("DATABASE")
+user = os.getenv("USER")
+password = os.getenv("PASSWORD")
 
 app = FastAPI()
 
 class Post(BaseModel):
     title: str
     content: str
-    published: bool = True
-    rating: Optional[int] = None
+    published: Optional[bool] = True
+
+while True:
+    try:
+        conn = psycopg2.connect(host=host, database=database, user=user, password=password, cursor_factory=RealDictCursor)
+        cursor = conn.cursor()
+        print("DB connected successfully")
+        break
+    except Exception as error:
+        print(f"Conncetion to DB failed: {error}")
+        time.sleep(2)
 
 my_posts = [
     {
@@ -34,19 +54,22 @@ def get_idx(id: int):
 
 @app.get("/")
 def get_message():
-    return {"message": "Landing successful"}
+    return {"message": "Landed successful"}
 
 @app.get("/posts")
 def get_posts():
-    return {"data": my_posts}
+    cursor.execute(""" SELECT * FROM posts """)
+    posts = cursor.fetchall()
+    return {"data": posts}
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
 def create_post(post: Post):
+    cursor.execute(""" INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING * """, (post.title, post.content, post.published))
+    new_post = cursor.fetchone()
+    conn.commit()
     post_dict = post.model_dump()
-    post_dict['_id'] = randrange(0, 10000000)
-    my_posts.append(post_dict)
     return {"message": "Create post successful",
-            "data": post_dict}
+            "data": new_post}
 
 @app.get("/posts/{id}")
 def get_post(id: int, response: Response):
