@@ -73,11 +73,11 @@ def create_post(post: Post):
 
 @app.get("/posts/{id}")
 def get_post(id: int, response: Response):
-    idx = get_idx(id)
-    if idx is None:
+    cursor.execute(""" SELECT * FROM posts WHERE id = %s """, (id, ))
+    post = cursor.fetchone()
+    if post is None:
         raise HTTPException(status_code=404,
                             detail=f"Post with id: {id} was not found.")
-    post = my_posts[idx]
     return {"data": post}
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
