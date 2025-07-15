@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response, status, HTTPException
+from fastapi import FastAPI, Response, status, HTTPException, Depends
 from fastapi.params import Body
 from pydantic import BaseModel
 from typing import Optional
@@ -7,7 +7,12 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
 import os
+from sqlalchemy.orm import Session
 import time
+from . import models
+from .database import engine, SessionLocal, get_db
+
+models.Base.metadata.create_all(bind=engine)
 
 load_dotenv()
 
@@ -33,24 +38,11 @@ while True:
         print(f"Conncetion to DB failed: {error}")
         time.sleep(2)
 
-my_posts = [
-    {
-        "_id": 1,
-        "title": "post1",
-        "content": "content1",
-    },
-    {
-        "_id": 2,
-        "title": "foods",
-        "content": "I like pizza",
-    }
-]
-
-def get_idx(id: int):
-    for idx, post in enumerate(my_posts):
-        if post["_id"] == id:
-            return idx
-    return None
+@app.get("/sqlalchemy")
+def test_posts(db: Session = Depends(get_db)):
+    posts = db.query(models.Post).all()
+    return {"status": "success",
+            "data": posts}
 
 @app.get("/")
 def get_message():
