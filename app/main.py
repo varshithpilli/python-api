@@ -5,8 +5,6 @@ from typing import Optional, List
 from random import randrange
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from dotenv import load_dotenv
-import os
 from sqlalchemy.orm import Session
 import time
 from . import models, schemas, utils
@@ -15,6 +13,8 @@ from . routers import posts, users, auth
 
 models.Base.metadata.create_all(bind=engine)
 
+from dotenv import load_dotenv
+import os
 load_dotenv()
 
 host = os.getenv("HOST")
