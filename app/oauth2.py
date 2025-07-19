@@ -1,5 +1,5 @@
 from jose import JWTError, jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from . import schemas
 import os
@@ -16,7 +16,7 @@ exp_time = int(os.getenv("EXPIRY_MINUTES"))
 
 def create_access_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.now() + timedelta(minutes=exp_time)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=exp_time)
     to_encode.update({"exp": expire})
 
     encoded_jwt = jwt.encode(to_encode, key, algorithm=algo)
@@ -27,7 +27,7 @@ def verify_access_token(token: str, creds_exception):
     try:
         payload = jwt.decode(token, key, algorithms=algo)
 
-        id: str = payload.get("user_id")
+        id: int = payload.get("user_id")
 
         if id is None:
             raise creds_exception
