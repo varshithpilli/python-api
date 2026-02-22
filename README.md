@@ -1,3 +1,3 @@
 # FastAPI trials
 
-`uvicorn app.main:app --reload`
+My attempt to actually learn FastAPI, and its other related stuff like pydantic etc.
