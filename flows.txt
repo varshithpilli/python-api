@@ -1,0 +1,14 @@
+root:
+POST    "/login" ->
+GET     "/"      ->
+
+posts:
+POST    "/"      ->
+GET     "/"      ->
+GET     "/id"    ->
+PUT     "/id"    ->
+DELETE  "/id"    ->
+
+users:
+POST    "/"      ->
+GET     "/id"    ->
